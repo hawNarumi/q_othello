@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>オセロゲーム</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    
+    .game-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .score {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .current-player {
+      font-size: 20px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+      background-color: #2d5016;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 480px;
+    }
+    
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: #4a7c59;
+      border: 1px solid #2d5016;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      border-radius: 4px;
+    }
+    
+    .cell:hover {
+      background-color: #5a8c69;
+    }
+    
+    .cell.valid-move {
+      background-color: #6fa876;
+      box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+    
+    .cell.valid-move:hover {
+      background-color: #7fb886;
+    }
+    
+    .piece {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #333;
+    }
+    
+    .black {
+      background-color: #333;
+    }
+    
+    .white {
+      background-color: #fff;
+    }
+    
+    .controls {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    
+    .btn-reset {
+      background-color: #dc3545;
+    }
+    
+    .btn-reset:hover {
+      background-color: #c82333;
+    }
+    
+    .flash {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      text-align: center;
+    }
+    
+    .flash.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .flash.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .game-over {
+      text-align: center;
+      padding: 20px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .game-over h2 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .winner {
+      font-size: 24px;
+      font-weight: bold;
+      color: #28a745;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-container">
+    <h1>🔴⚪ オセロゲーム ⚪🔴</h1>
+    
+    <% if flash[:success] %>
+      <div class="flash success"><%= flash[:success] %></div>
+    <% end %>
+    
+    <% if flash[:error] %>
+      <div class="flash error"><%= flash[:error] %></div>
+    <% end %>
+    
+    <div class="game-info">
+      <div class="score">
+        <div>🔴 黒: <%= @game.black_count %>個</div>
+        <div>⚪ 白: <%= @game.white_count %>個</div>
+      </div>
+      
+      <% unless @game.game_over %>
+        <div class="current-player">
+          <%= @game.current_player_name %>の番です
+        </div>
+      <% end %>
+    </div>
+    
+    <% if @game.game_over %>
+      <div class="game-over">
+        <h2>ゲーム終了！</h2>
+        <div class="winner">
+          勝者: <%= @game.winner_name %>
+        </div>
+        <div style="margin-top: 10px;">
+          最終スコア - 黒: <%= @game.black_count %>, 白: <%= @game.white_count %>
+        </div>
+      </div>
+    <% end %>
+    
+    <div class="board">
+      <% (0...8).each do |row| %>
+        <% (0...8).each do |col| %>
+          <% cell_value = @game.board[row][col] %>
+          <% is_valid_move = @valid_moves.include?([row, col]) && !@game.game_over %>
+          
+          <%= form_with url: move_path, method: :post, local: true, class: "cell #{'valid-move' if is_valid_move}" do |form| %>
+            <%= form.hidden_field :row, value: row %>
+            <%= form.hidden_field :col, value: col %>
+            
+            <% if cell_value == 1 %>
+              <div class="piece black"></div>
+            <% elsif cell_value == 2 %>
+              <div class="piece white"></div>
+            <% elsif is_valid_move %>
+              <%= form.submit "", style: "background: none; border: none; width: 100%; height: 100%; cursor: pointer;" %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+    
+    <div class="controls">
+      <%= form_with url: new_game_path, method: :get, local: true, style: "display: inline;" do |form| %>
+        <%= form.submit "新しいゲーム", class: "btn btn-reset" %>
+      <% end %>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+      <p>💡 ヒント: 緑色のマスをクリックして石を置けます</p>
+      <p>ルール: 相手の石を挟んで自分の色に変えましょう！</p>
+    </div>
+  </div>
+</body>
+</html>
