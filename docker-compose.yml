@@ -3,7 +3,11 @@ services:
     build: .
     ports:
       - "3000:3000"
-    environment:
-      - RAILS_ENV=development
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
     stdin_open: true
     tty: true
+
+volumes:
+  bundle:

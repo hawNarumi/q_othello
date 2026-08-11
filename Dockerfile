@@ -1,8 +1,6 @@
 # syntax = docker/dockerfile:1
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=3.4.4
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim
+FROM registry.docker.com/library/ruby:4.0.6-slim
 
 # Rails app lives here
 WORKDIR /rails
@@ -36,7 +34,8 @@ RUN RAILS_ENV=development ./bin/rails assets:precompile
 
 # Run and own only the runtime files as a non-root user for security
 RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails log tmp storage
+    mkdir -p /usr/local/bundle && \
+    chown -R rails:rails /rails /usr/local/bundle
 USER rails:rails
 
 # Entrypoint prepares the database.
