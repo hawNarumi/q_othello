@@ -36,7 +36,7 @@ RUN RAILS_ENV=development ./bin/rails assets:precompile
 
 # Run and own only the runtime files as a non-root user for security
 RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails log tmp storage
+    chown -R rails:rails /rails
 USER rails:rails
 
 # Entrypoint prepares the database.
