@@ -106,12 +106,12 @@ When developing with Docker:
 
 To access the Rails console in the Docker container:
 ```bash
-docker compose exec web rails console
+docker compose run --rm web rails console
 ```
 
 To access the container shell:
 ```bash
-docker compose exec web bash
+docker compose run --rm web bash
 ```
 
 ## Project Structure
