@@ -5,5 +5,9 @@ services:
       - "3000:3000"
     volumes:
       - .:/rails
+      - bundle:/usr/local/bundle
     stdin_open: true
     tty: true
+
+volumes:
+  bundle:
