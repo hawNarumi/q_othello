@@ -4,21 +4,23 @@ A web-based Othello (Reversi) game built with Ruby on Rails.
 
 ## System Requirements
 
-* Ruby version: 3.4.4
-* Rails version: 8.0.1
-* Node.js (for asset compilation)
+* Ruby version: 4.0.6
+* Rails version: 8.1.3.1
+* Docker & Docker Compose (recommended)
 
 ## Getting Started
 
-### Option 1: Running with Docker (Recommended)
+### Running with Docker (Recommended)
 
 The easiest way to run this application is using Docker. This method doesn't require you to install Ruby or Rails on your local machine.
 
 #### Prerequisites
+
 - Docker
 - Docker Compose
 
 #### Quick Start
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -32,6 +34,7 @@ open http://localhost:3000
 ```
 
 #### Docker Commands
+
 ```bash
 # Start the application in the background
 docker compose up -d
@@ -56,21 +59,26 @@ docker compose restart
 ```
 
 #### Docker Configuration
-- **Base Image**: Ruby 3.4.4-slim
+
+- **Base Image**: Ruby 4.0.6-slim
 - **Port**: 3000 (mapped to host port 3000)
 - **Environment**: Development
-- **Volume**: No persistent volumes (stateless application)
+- **Volumes**:
+  - `.:/rails` — Source code mount for live file sync
+  - `bundle:/usr/local/bundle` — Persistent gem cache
 
-### Option 2: Running Locally
+### Running Locally
 
 If you prefer to run the application directly on your local machine:
 
 #### Prerequisites
-- Ruby 3.4.4
-- Rails 8.0.1
+
+- Ruby 4.0.6
+- Rails 8.1.3.1
 - Bundler
 
 #### Setup
+
 ```bash
 # Install dependencies
 bundle install
@@ -88,8 +96,8 @@ open http://localhost:3000
 ## Application Features
 
 * Web-based Othello/Reversi game
-* Interactive game board
-* Real-time game state updates
+* Interactive game board with valid move highlighting
+* Session-based game state management
 * Responsive design
 
 ## Development
@@ -99,37 +107,81 @@ open http://localhost:3000
 When developing with Docker:
 
 1. Make your code changes
-2. Rebuild the Docker image: `docker compose build`
-3. Restart the container: `docker compose up -d`
+2. Changes are reflected immediately via volume mount (`.:/rails`)
+3. For gem changes, rebuild the Docker image: `docker compose build`
+4. Restart the container: `docker compose up -d`
 
 ### Debugging
 
 To access the Rails console in the Docker container:
+
 ```bash
 docker compose run --rm web rails console
 ```
 
 To access the container shell:
+
 ```bash
 docker compose run --rm web bash
+```
+
+### Testing
+
+Run the test suite:
+
+```bash
+docker compose run --rm web bin/rails test
+```
+
+### Linting
+
+Run RuboCop with auto-fix:
+
+```bash
+docker compose run --rm web bundle exec rubocop -a
+```
+
+Run security scans:
+
+```bash
+# Static analysis for Rails vulnerabilities
+docker compose run --rm web bundle exec brakeman --no-pager
+
+# Gem vulnerability audit
+docker compose run --rm web bundle exec bundler-audit check --update
 ```
 
 ## Project Structure
 
 ```
 othello_game/
+├── .github/workflows/    # CI workflow
 ├── app/
 │   ├── controllers/
 │   ├── models/
 │   ├── views/
 │   └── assets/
 ├── config/
+├── docs/                 # Design documents
+├── test/                 # Test suite
 ├── Dockerfile
 ├── docker-compose.yml
 ├── Gemfile
 ├── Gemfile.lock
+├── .ruby-version
+├── .rubocop.yml
 └── README.md
 ```
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration. The CI workflow runs on every push and pull request:
+
+| Job | Description |
+| --- | --- |
+| `scan_ruby` | Runs Brakeman (static analysis) and bundler-audit (gem vulnerabilities) |
+| `lint` | Runs RuboCop for code style enforcement |
+| `test` | Runs the full test suite |
 
 ## Deployment
 
@@ -145,7 +197,7 @@ For production deployment, you can use the same Docker setup:
 
 For traditional deployment without Docker:
 
-1. Set up Ruby 3.4.4 and Rails 8.0.1 on your server
+1. Set up Ruby 4.0.6 and Rails 8.1.3.1 on your server
 2. Install dependencies with `bundle install --deployment`
 3. Precompile assets with `RAILS_ENV=production rails assets:precompile`
 4. Start the application with `RAILS_ENV=production rails server`
@@ -155,24 +207,33 @@ For traditional deployment without Docker:
 ### Docker Issues
 
 **Container won't start:**
+
 - Check if port 3000 is already in use: `lsof -i :3000`
 - View container logs: `docker compose logs`
 
 **Application not accessible:**
+
 - Ensure the container is running: `docker ps`
 - Check port mapping: `docker compose ps`
 
 **Build failures:**
+
 - Clean Docker cache: `docker system prune -f`
 - Rebuild from scratch: `docker compose build --no-cache`
+
+**Permission denied on bundle install:**
+
+- Remove old volumes and rebuild: `docker compose down -v && docker compose build --no-cache`
 
 ### Local Development Issues
 
 **Bundle install fails:**
-- Ensure you have Ruby 3.4.4 installed
+
+- Ensure you have Ruby 4.0.6 installed
 - Update bundler: `gem update bundler`
 
 **Assets not loading:**
+
 - Precompile assets: `rails assets:precompile`
 - Clear cache: `rails tmp:clear`
 
@@ -181,5 +242,6 @@ For traditional deployment without Docker:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test with Docker: `docker compose up`
-5. Submit a pull request
+4. Run tests: `docker compose run --rm web bin/rails test`
+5. Run linter: `docker compose run --rm web bundle exec rubocop -a`
+6. Submit a pull request
