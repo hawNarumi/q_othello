@@ -7,7 +7,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "games#new"
-  
+
   get "game", to: "games#show"
   get "new_game", to: "games#new"
   post "move", to: "games#move"
